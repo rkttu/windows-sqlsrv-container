@@ -9,14 +9,14 @@ $ImageTag = '{0}.{1}.{2}.{3}-{4}' -f `
 $MCRImagePath = 'mcr.microsoft.com/windows/servercore:{0}' -f $ImageTag
 $LocalImagePath = "mssqldev:$ImageTag"
 
-if ($(docker images -q $MCRImagePath) -eq $null) {
+if ($null -eq $(docker images -q $MCRImagePath)) {
   Write-Output "Pulling $MCRImagePath"
   docker pull $MCRImagePath
 } else {
   Write-Output "$MCRImagePath already cached."
 }
 
-if ($(docker images -q $MCRImagePath) -eq $null) {
+if ($null -eq $(docker images -q $MCRImagePath)) {
   throw "Cannot pull $MCRImagePath"
 }
 

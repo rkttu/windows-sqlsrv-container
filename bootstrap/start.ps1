@@ -1,80 +1,57 @@
-# The script sets the sa password and start the SQL Service
-# Also it attaches additional database from the disk
-# The format for attach_dbs
+param
+(
+    [Parameter(Mandatory=$false)]
+    [string]$SA_PWD,
 
-param(
-[Parameter(Mandatory=$false)]
-[string]$sa_password,
+    [Parameter(Mandatory=$false)]
+    [string]$ACCEPT_EULA,
 
-[Parameter(Mandatory=$false)]
-[string]$ACCEPT_EULA,
-
-[Parameter(Mandatory=$false)]
-[string]$attach_dbs
+    [Parameter(Mandatory=$false)]
+    [string]$ATTACH_DBS
 )
 
-
-if($ACCEPT_EULA -ne "Y" -And $ACCEPT_EULA -ne "y")
-{
+if ("$ACCEPT_EULA".ToUpperInvariant() -ne 'Y') {
 	Write-Verbose "ERROR: You must accept the End User License Agreement before this container can start."
 	Write-Verbose "Set the environment variable ACCEPT_EULA to 'Y' if you accept the agreement."
-
     exit 1
 }
 
 # start the service
 Write-Verbose "Starting SQL Server"
-start-service MSSQLSERVER
+Start-Service -Name 'MSSQLSERVER'
 
-if($sa_password -eq "_") {
-    if (Test-Path $env:sa_password_path) {
-        $sa_password = Get-Content -Raw $secretPath
-    }
-    else {
-        Write-Verbose "WARN: Using default SA password, secret file not found at: $secretPath"
-    }
-}
-
-if($sa_password -ne "_")
+if ($null -ne $SA_PWD)
 {
     Write-Verbose "Changing SA login credentials"
-    $sqlcmd = "ALTER LOGIN sa with password=" +"'" + $sa_password + "'" + ";ALTER LOGIN sa ENABLE;"
+    $sqlcmd = "ALTER LOGIN sa with password=" + "'" + $SA_PWD + "'" + ";ALTER LOGIN sa ENABLE;"
     & sqlcmd -Q $sqlcmd
 }
 
-$attach_dbs_cleaned = $attach_dbs.TrimStart('\\').TrimEnd('\\')
+$ATTACH_DBS_CLEANED = $ATTACH_DBS.TrimStart('\\').TrimEnd('\\')
+$dbs = $ATTACH_DBS_CLEANED | ConvertFrom-Json
 
-$dbs = $attach_dbs_cleaned | ConvertFrom-Json
-
-if ($null -ne $dbs -And $dbs.Length -gt 0)
+if ($null -ne $dbs -and $dbs.Length -gt 0)
 {
     Write-Verbose "Attaching $($dbs.Length) database(s)"
 	    
-    Foreach($db in $dbs) 
+    Foreach ($db in $dbs) 
     {
-        if($db.saskey.length -gt 0)
-        { 
-            $saskey = $true 
-        }
-        else
-        { 
-            $saskey = $false 
-        }
-            
+        $saskey = ($db.saskey.length -gt 0)
         $files = @();
         $hasFile = $true;
-        Foreach($file in $db.dbFiles)
+
+        Foreach ($file in $db.dbFiles)
         {
             $hasFile = $hasFile -and (Test-Path -Type Leaf -Path $file)
             $files += "(NAME = N'$($db.dbName)_$($file -replace '\.', '_')', FILENAME = N'$($file)')";
             
             # check for a saskey and create one credential per blob Container                  
-            if($saskey)
+            if ($saskey)
             {
                 $blob_container = (Split-Path $file).Replace('\','/');                                         
                 $sql_credential = "IF NOT EXISTS (SELECT 1 FROM SYS.CREDENTIALS WHERE NAME = '" + $blob_container + "') BEGIN CREATE CREDENTIAL [" + $blob_container + "] WITH IDENTITY='SHARED ACCESS SIGNATURE', SECRET= '" + $db.saskey + "' END;"              
             
-                Write-Verbose "Invoke-Sqlcmd -Query $($sql_credential)"
+                Write-Verbose "sqlcmd -Q $($sql_credential)"
                 & sqlcmd -Q $sql_credential
             }
         }
@@ -85,7 +62,7 @@ if ($null -ne $dbs -And $dbs.Length -gt 0)
         }
         $sqlcmd = "sp_detach_db $($db.dbName);CREATE DATABASE $($db.dbName) ON $($files) $forAttach ;"
 
-        Write-Verbose "Invoke-Sqlcmd -Query $($sqlcmd)"
+        Write-Verbose "sqlcmd -Q $($sqlcmd)"
         & sqlcmd -Q $sqlcmd
 	}
 }

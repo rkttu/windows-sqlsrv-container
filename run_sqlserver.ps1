@@ -14,7 +14,7 @@ if ($(docker images -q $LocalImagePath) -eq '') {
 
 $ContainerName = 'mssqldev'
 
-if ($(docker ps -f name="$ContainerName" -q -a) -ne $null) {
+if ($null -ne $(docker ps -f name="$ContainerName" -q -a)) {
   $Decision = $Host.UI.PromptForChoice( `
     'Confirmation', `
     'The container {0} is already exists. Remove and re-create the container?' -f $ContainerName, `
@@ -25,7 +25,7 @@ if ($(docker ps -f name="$ContainerName" -q -a) -ne $null) {
   }
 }
 
-if ($(docker ps -f name="$ContainerName" -q) -ne $null) {
+if ($null -ne $(docker ps -f name="$ContainerName" -q)) {
   throw "The container $ContainerName already running."
 }
 
@@ -57,9 +57,9 @@ Write-Host
 docker.exe run -d `
   -p 1433:1433 `
   -v $('{0}:C:/db/' -f $DbDirectory.Replace('\\', '/')) `
-  -e sa_password=$SaPassword `
+  -e SA_PWD=$SaPassword `
   -e ACCEPT_EULA=Y `
-  -e $('attach_dbs={0}' -f $AttachDbConfig) `
+  -e $('ATTACH_DBS={0}' -f $AttachDbConfig) `
   --isolation=process `
   --name=$ContainerName `
   $LocalImagePath

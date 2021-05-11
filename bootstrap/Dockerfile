@@ -4,10 +4,9 @@ FROM mcr.microsoft.com/windows/servercore:${OS_VERSION}
 ENV exe "https://go.microsoft.com/fwlink/?linkid=835677"
 ENV box "https://go.microsoft.com/fwlink/?linkid=835679"
 
-ENV sa_password="_" \
-    attach_dbs="[]" \
-    ACCEPT_EULA="_" \
-    sa_password_path="C:\ProgramData\Docker\secrets\sa-password"
+ENV SA_PWD="_" \
+    ATTACH_DBS="[]" \
+    ACCEPT_EULA="_"
 
 SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
 
@@ -20,13 +19,12 @@ RUN Invoke-WebRequest -Uri $env:box -OutFile SQL.box ; \
         .\setup\setup.exe /q /ACTION=Install /INSTANCENAME=MSSQLSERVER /FEATURES=SQLEngine /UPDATEENABLED=0 /SQLSVCACCOUNT='NT AUTHORITY\System' /SQLSYSADMINACCOUNTS='BUILTIN\ADMINISTRATORS' /TCPENABLED=1 /NPENABLED=0 /IACCEPTSQLSERVERLICENSETERMS ; \
         Remove-Item -Recurse -Force SQL.exe, SQL.box, setup
 
-RUN stop-service MSSQLSERVER ; \
-        set-itemproperty -path 'HKLM:\software\microsoft\microsoft sql server\mssql14.MSSQLSERVER\mssqlserver\supersocketnetlib\tcp\ipall' -name tcpdynamicports -value '' ; \
-        set-itemproperty -path 'HKLM:\software\microsoft\microsoft sql server\mssql14.MSSQLSERVER\mssqlserver\supersocketnetlib\tcp\ipall' -name tcpport -value 1433 ; \
-        set-itemproperty -path 'HKLM:\software\microsoft\microsoft sql server\mssql14.MSSQLSERVER\mssqlserver\' -name LoginMode -value 2 ;
+RUN Stop-Service -Name 'MSSQLSERVER' ; \
+        Set-ItemProperty -Path 'HKLM:\software\microsoft\microsoft sql server\mssql14.MSSQLSERVER\mssqlserver\supersocketnetlib\tcp\ipall' -Name 'tcpdynamicports' -Value '' ; \
+        Set-ItemProperty -Path 'HKLM:\software\microsoft\microsoft sql server\mssql14.MSSQLSERVER\mssqlserver\supersocketnetlib\tcp\ipall' -Name 'tcpport' -Value 1433 ; \
+        Set-ItemProperty -Path 'HKLM:\software\microsoft\microsoft sql server\mssql14.MSSQLSERVER\mssqlserver' -Name 'LoginMode' -Value 2 ;
 
 HEALTHCHECK CMD [ "sqlcmd", "-Q", "select 1" ]
 
 COPY start.ps1 /
-
-CMD .\start -sa_password $env:sa_password -ACCEPT_EULA $env:ACCEPT_EULA -attach_dbs \"$env:attach_dbs\" -Verbose
+CMD .\start.ps1 -SA_PWD $env:SA_PWD -ACCEPT_EULA $env:ACCEPT_EULA -ATTACH_DBS \"$env:ATTACH_DBS\" -Verbose
