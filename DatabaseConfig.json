@@ -1,0 +1,16 @@
+[
+   {
+      "dbName":"MaxDb",
+      "dbFiles":[
+         "C:\\db\\maxtest.mdf",
+         "C:\\db\\maxtest_log.ldf"
+      ]
+   },
+   {
+      "dbName":"PerryDb",
+      "dbFiles":[
+         "C:\\db\\perrytest.mdf",
+         "C:\\db\\perrytest_log.ldf"
+      ]
+   }
+]
