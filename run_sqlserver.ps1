@@ -1,3 +1,9 @@
+param
+(
+    [Parameter(Mandatory=$false)]
+    [string]$SA_PWD
+)
+
 $OSVer = Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion'
 $Arch = "$env:PROCESSOR_ARCHITECTURE".ToLowerInvariant()
 
@@ -41,9 +47,14 @@ if (-not (Test-Path -Path $DbConfig -Type Leaf)) {
 $AttachDbConfig = ((Get-Content -Path $DbConfig | ConvertFrom-Json) | ConvertTo-Json -Depth 100 -Compress) -replace '"', "'"
 Write-Output $AttachDbConfig
 
+$SaPassword = $SA_PWD
+
+if ([String]::IsNullOrWhiteSpace($SaPassword)) {
+  Write-Host "SA account password is empty; Creating a new random password."
 Add-Type -AssemblyName 'System.Web'
 $SaPassword = [System.Web.Security.Membership]::GeneratePassword(8, 0)
 Write-Host $("Generated SA Password: {0}" -f $SaPassword)
+}
 
 $SqlcmdCommand = $("sqlcmd.exe -S localhost -U sa -P '{0}' -d master" -f $SaPassword)
 
