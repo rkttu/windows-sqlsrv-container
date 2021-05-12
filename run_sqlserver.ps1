@@ -64,6 +64,10 @@ Write-Host $SqlcmdCommand
 Write-Host " - or - "
 Write-Host "docker.exe exec -it $ContainerName sqlcmd"
 Write-Host
+Write-Host "You can use the connection string for your application: "
+Write-Host
+Write-Host $("Server=localhost,1433;Database=master;User Id=sa;Password={0}" -f $SaPassword)
+Write-Host
 
 docker.exe run -d `
   -p 1433:1433 `
