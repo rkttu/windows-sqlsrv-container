@@ -14,8 +14,8 @@ $ImageTag = '{0}.{1}.{2}.{3}-{4}' -f `
 
 $LocalImagePath = "mssqldev:$ImageTag"
 
-if ($(docker images -q $LocalImagePath) -eq '') {
-  throw "Cannot find $LocalImagePath"
+if ($null -eq $(docker images -q $LocalImagePath)) {
+  .\build_image.ps1
 }
 
 $ContainerName = 'mssqldev'
@@ -51,9 +51,9 @@ $SaPassword = $SA_PWD
 
 if ([String]::IsNullOrWhiteSpace($SaPassword)) {
   Write-Host "SA account password is empty; Creating a new random password."
-Add-Type -AssemblyName 'System.Web'
-$SaPassword = [System.Web.Security.Membership]::GeneratePassword(8, 0)
-Write-Host $("Generated SA Password: {0}" -f $SaPassword)
+  Add-Type -AssemblyName 'System.Web'
+  $SaPassword = [System.Web.Security.Membership]::GeneratePassword(8, 0)
+  Write-Host $("Generated SA Password: {0}" -f $SaPassword)  
 }
 
 $SqlcmdCommand = $("sqlcmd.exe -S localhost -U sa -P '{0}' -d master" -f $SaPassword)
