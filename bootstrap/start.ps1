@@ -23,7 +23,7 @@ Start-Service -Name 'MSSQLSERVER'
 if ($null -ne $SA_PWD)
 {
     Write-Verbose "Changing SA login credentials"
-    $sqlcmd = "ALTER LOGIN sa with password=" + "'" + $SA_PWD + "'" + ";ALTER LOGIN sa ENABLE;"
+    $sqlcmd = "ALTER LOGIN sa WITH PASSWORD=" + "'" + $SA_PWD + "'" + ",DEFAULT_DATABASE=[master], CHECK_EXPIRATION=OFF, CHECK_POLICY=OFF;ALTER LOGIN sa ENABLE;"
     & sqlcmd -Q $sqlcmd
 }
 
