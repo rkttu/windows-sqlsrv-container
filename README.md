@@ -10,17 +10,19 @@ This repository uses some code on the GitHub `microsoft/mssql-docker` repository
 
 ## Prerequisites
 
-- Latest Version of Docker Desktop for Windows
-- At least Windows 10 1809 -- or - Windows Server 2019
-- If you are using this script in Windows 10, you may need virtualization capability to enable Hyper-V feature
+- Latest Version of Docker Desktop for Windows [here](https://hub.docker.com/editions/community/docker-ce-desktop-windows).
+- At least Windows 10 1809 -- or - Windows Server 2019 required.
+- If you are using this script in Windows 10, you may need virtualization capability to enable Hyper-V feature.
 
 ## How to use
 
-- Install Docker Desktop for Windows
+- Install Docker Desktop for Windows ()
 - Activate the Windows container mode
 - Run `build_image.ps1` script to build SQL server on Windows container image on your local environment
 - Run `run_sqlserver.ps1` script to run SQL server Windows container
 - You can now access your containerized SQL server via `localhost:1433`.
+  - Run `show_logs.ps1` script to watch container's log.
+  - Run `enter_sqlcmd.ps1` script to execute sqlcmd.exe tool in your container.
 
 ## Create or attach databases
 
