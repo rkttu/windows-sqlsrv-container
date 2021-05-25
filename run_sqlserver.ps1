@@ -1,21 +1,28 @@
 param
 (
     [Parameter(Mandatory=$false)]
-    [string]$SA_PWD
+    [string]$SA_PWD,
+
+    [Parameter(Mandatory=$false)]
+    [string]$OS_VERSION_TAG
 )
 
 $OSVer = Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion'
 $Arch = "$env:PROCESSOR_ARCHITECTURE".ToLowerInvariant()
 
-$ImageTag = '{0}.{1}.{2}.{3}-{4}' -f `
-  $OSVer.CurrentMajorVersionNumber, `
-  $OSVer.CurrentMinorVersionNumber, `
-  $OSVer.CurrentBuild, $OSVer.UBR, $Arch
+$ImageTag = $OS_VERSION_TAG
+
+if ([String]::IsNullOrWhiteSpace($ImageTag)) {
+  $ImageTag = '{0}.{1}.{2}.{3}-{4}' -f `
+    $OSVer.CurrentMajorVersionNumber, `
+    $OSVer.CurrentMinorVersionNumber, `
+    $OSVer.CurrentBuild, $OSVer.UBR, $Arch
+}
 
 $LocalImagePath = "mssqldev:$ImageTag"
 
 if ($null -eq $(docker images -q $LocalImagePath)) {
-  .\build_image.ps1
+  .\build_image.ps1 -OS_VERSION_TAG $ImageTag
 }
 
 $ContainerName = 'mssqldev'

@@ -24,6 +24,17 @@ This repository uses some code on the GitHub `microsoft/mssql-docker` repository
   - Run `show_logs.ps1` script to watch container's log.
   - Run `enter_sqlcmd.ps1` script to execute sqlcmd.exe tool in your container.
 
+### PowerShell script arguments
+
+Following arguments can be used with `build_image.ps1` script.
+
+- `OS_VERSION_TAG`: Specify valid mcr.microsoft.com/windows/servercore tag for build a new image. Default vaule will be your host operating system version.
+
+Following arguments can be used with `run_sqlserver.ps1` script.
+
+- `SA_PWD`: Specify the System Administrator account password. This argument does not constrained by security enforcement policy of the Windows Server. Default password will be auto-generated.
+- `OS_VERSION_TAG`: Specify valid mcr.microsoft.com/windows/servercore tag for build a new image. Default value will be your host operating system version.
+
 ## Create or attach databases
 
 The first time, this script creates a configuration file in `%USERPROFILE%\My Database` directory. The auto-generated container instance `mssqldev` will mount this directory as `C:\db` folder to mount your existing databases or create new databases.
